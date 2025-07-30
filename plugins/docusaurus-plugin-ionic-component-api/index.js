@@ -1,5 +1,10 @@
 const fetch = require('node-fetch');
 
+// Constants for directory base paths
+const DOCS_API_BASE_PATH = './docs/api/auto-generated';
+const VERSIONED_DOCS_BASE_PATH = './versioned_docs/version-';
+const API_AUTO_GENERATED_SUFFIX = '/api/auto-generated';
+
 module.exports = function (context, options) {
   return {
     name: 'docusaurus-plugin-ionic-component-api',
@@ -101,16 +106,39 @@ module.exports = function (context, options) {
 
 /**
  * Calculates the path to the directory where the auto-generated markdown files are stored.
- * @param {*} componentTag The tag name of the component, e.g.: ion-button
- * @param {*} version The version of Ionic that the file pertains to, e.g.: v6
- * @param {*} isCurrentVersion Whether the version is the current version of the docs
- * @returns The path to the directory where the auto-generated markdown files are stored.
+ *
+ * @param {string} componentTag - The tag name of the component (e.g., 'button' for ion-button).
+ *                               Must be a non-empty string.
+ * @param {string} version - The version of Ionic that the file pertains to (e.g., 'v6').
+ *                          Required when isCurrentVersion is false.
+ * @param {boolean} isCurrentVersion - Whether the version is the current version of the docs.
+ *                                   When true, files are stored in the main docs directory.
+ *                                   When false, files are stored in versioned docs directory.
+ * @returns {string} The path to the directory where the auto-generated markdown files are stored.
+ * @throws {Error} Throws an error if componentTag is missing, empty, or not a string.
+ * @throws {Error} Throws an error if version is missing, empty, or not a string when isCurrentVersion is false.
+ * @throws {Error} Throws an error if isCurrentVersion is not a boolean.
  */
 function getDirectoryPath(componentTag, version, isCurrentVersion) {
-  if (isCurrentVersion) {
-    return `./docs/api/auto-generated/${componentTag}`;
+  // Validate componentTag parameter
+  if (!componentTag || typeof componentTag !== 'string' || componentTag.trim() === '') {
+    throw new Error('componentTag must be a non-empty string');
   }
-  return `./versioned_docs/version-${version}/api/auto-generated/${componentTag}`;
+
+  // Validate isCurrentVersion parameter
+  if (typeof isCurrentVersion !== 'boolean') {
+    throw new Error('isCurrentVersion must be a boolean');
+  }
+
+  // Validate version parameter when not current version
+  if (!isCurrentVersion && (!version || typeof version !== 'string' || version.trim() === '')) {
+    throw new Error('version must be a non-empty string when isCurrentVersion is false');
+  }
+
+  if (isCurrentVersion) {
+    return `${DOCS_API_BASE_PATH}/${componentTag}`;
+  }
+  return `${VERSIONED_DOCS_BASE_PATH}${version}${API_AUTO_GENERATED_SUFFIX}/${componentTag}`;
 }
 
 /**
